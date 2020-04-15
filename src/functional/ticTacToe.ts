@@ -1,4 +1,5 @@
+type TicTacToeResponse = void;
 
-export default () => {
-  return 0;
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export default (): TicTacToeResponse => {
 }
