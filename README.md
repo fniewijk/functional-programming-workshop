@@ -1,5 +1,15 @@
 # functional-programming-workshop
 
+How to start: 
+
+Run `npm install`
+
+then
+
+Run `npm run test:watch`
+
+Implement these rules for an imperative program and a functional program.
+
 Tic Tac Toe Rules:
 
 - Player 1 starts.
