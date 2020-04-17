@@ -13,6 +13,6 @@ export interface Move {
 }
 
 export interface Status {
-  ended: boolean;
+  player: Player;
   winner?: Player;
 }
