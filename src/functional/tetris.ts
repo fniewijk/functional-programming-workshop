@@ -107,13 +107,11 @@ const movePiece = (field: Field[][], piece: TetrominoPiece, move: Move, nextPiec
 }
 
 const rotatePiece = (field: Field[][], piece: TetrominoPiece): Output => {
-
-  // add rotation collision and bounds checking.
-  const newShape = [...new Array(piece.shape[0].length)].map(() => [...new Array(piece.shape.length)]);
+  const newShape = [...new Array(piece.shape[0].length)].map(() => [...new Array(piece.shape.length).map(()=>0)]);
 
   piece.shape.forEach((xValue: number[], indexX: number) => {
     xValue.forEach((yValue: number, indexY: number) => {
-      newShape[indexY][indexX] = yValue;
+      newShape[indexY][piece.shape.length - 1 - indexX] = yValue;
     });
   });
 
