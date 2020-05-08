@@ -1,8 +1,14 @@
 import { Field, Move, TetrominoPiece } from '../models/tetris.model';
 
+export interface Dimensions {
+  width: number;
+  height: number;
+}
+
 export interface Output {
   field: Field[][];
   piece: TetrominoPiece;
+  gameOver?: boolean;
 }
 
 export interface Input extends Output {
@@ -21,18 +27,22 @@ const pieces = {
   zPiece: { x: 0, y: 0, shape: [[0, 1, 1], [1, 1, 0]] },
 }
 
-const createField = (): Field[][] => [...new Array(10)].map((): Field[] => [...new Array(20)].map((): Field => 0));
+export const dimensions: Dimensions = { width: 10, height: 20 };
 
-export const dimensions: any = { width: 10, height: 20 };
+export const createField = (fill = 0): Field[][] => [...new Array(dimensions.width)].map((): Field[] => [...new Array(dimensions.height)].map((): Field => fill));
 
+const instantiatePiece = (piece: TetrominoPiece): TetrominoPiece => {
+  return { ...piece, x: Math.floor(dimensions.width / 2 - Math.floor(piece.shape.length / 2)) }
+}
 // SideEffect
 export const newPiece = (): TetrominoPiece => {
   const pick = Math.floor(Math.random() * Object.keys(pieces).length);
-  return Object.assign({}, Object.values(pieces)[pick]);
+  const piece = Object.values(pieces)[pick];
+  return instantiatePiece(piece);
 }
 
-export const newIPiece = (): TetrominoPiece => Object.assign({}, pieces.iPiece);
-export const newOPiece = (): TetrominoPiece => Object.assign({}, pieces.oPiece);
+export const newIPiece = (): TetrominoPiece => instantiatePiece(pieces.iPiece);
+export const newOPiece = (): TetrominoPiece => instantiatePiece(pieces.oPiece);
 
 const collisionDetection = (fields: Field[][], piece: TetrominoPiece): boolean => {
 
@@ -87,7 +97,14 @@ const movePiece = (field: Field[][], piece: TetrominoPiece, move: Move, nextPiec
     }
   }
 
-  if (!collisionDetection(field, piece) && collisionDetection(field, { x: newPos.x, y: newPos.y, shape: piece.shape })) {
+  const currentPositionCollision = collisionDetection(field, piece);
+  const nextPositionCollision = collisionDetection(field, { x: newPos.x, y: newPos.y, shape: piece.shape });
+
+  if (currentPositionCollision && nextPositionCollision) {
+    return { field, piece, gameOver: true };
+  }
+
+  if (!currentPositionCollision && nextPositionCollision) {
     const newField = placePiece(field, piece.x, piece.y, piece.shape);
     return { field: newField, piece: nextPiece };
   }
@@ -115,7 +132,7 @@ const rotatePiece = (field: Field[][], piece: TetrominoPiece): Output => {
     });
   });
 
-  if (!collisionDetection(field, { ...piece, shape: newShape }) && !(piece.x + newShape.length > dimensions.width - 1)) {
+  if (!collisionDetection(field, { ...piece, shape: newShape }) && !(piece.x + newShape.length > dimensions.width)) {
     return {
       field,
       piece: {
@@ -132,29 +149,28 @@ const rotatePiece = (field: Field[][], piece: TetrominoPiece): Output => {
 
 const removeLine = (fields: Field[][], line: number): Field[][] => {
   return fields.map((xValue: Field[]): Field[] => { 
-    xValue.splice(line, 1); 
-    xValue.unshift(0); 
-    return xValue
+    const newXValue = [...xValue];
+    newXValue.splice(line, 1); 
+    newXValue.unshift(0); 
+    return newXValue
   });
 }
 
 const removeLines = (fields: Field[][]): Field[][] => {
-
+  let newFields = [...fields];
   let fullLine = true;
-
-  for(let y = 0; y < fields[0].length; y++) {
-    for (let x = 0; x < fields.length; x++) {
-      if(fields[x][y] === 0) {
+  for(let y = 0; y < newFields[0].length; y++) {
+    for (let x = 0; x < newFields.length; x++) {
+      if(newFields[x][y] === 0) {
         fullLine = false;
       }
     }
     if (fullLine) {
-      fields = removeLine([...fields], y)
+      newFields = removeLine(newFields, y)
     } 
     fullLine = true;
   }
-
-  return fields;
+  return newFields;
 }
 
 // Rules, when you start you get a field and a 2x2 rectangular piece you can move with.
@@ -166,10 +182,7 @@ const removeLines = (fields: Field[][]): Field[][] => {
 // You can rotate pieces.
 // other shapes
 // remove complete lines.
-
-// TODO:
 // end game
-// fix rotation
 
 export default (input?: Input): Output => {
   if (!input) {
@@ -190,10 +203,12 @@ export default (input?: Input): Output => {
     const field = removeLines(movePieceOutput.field);
     return {
       field,
-      piece: movePieceOutput.piece
+      piece: movePieceOutput.piece,
+      gameOver: movePieceOutput.gameOver === true
     }
   }
-  const { field, piece } = input;
+  const { piece } = input;
+  const field = removeLines(input.field);
   return {
     field,
     piece,

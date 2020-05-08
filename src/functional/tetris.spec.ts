@@ -1,8 +1,7 @@
-import tetris from './tetris';
-import { Output, newIPiece, newOPiece } from './tetris';
+import tetris, { createField, Output, newIPiece, newOPiece } from './tetris';
 
 const pieceStartPosition = {
-  x: 0,
+  x: 4,
   y: 0,
 }
 
@@ -41,22 +40,21 @@ describe('tetris', () => {
       nextPiece: newIPiece()
     });
     expect(result.piece).toEqual({ x , y, shape: piece.shape });
-    expect(result.field[0][19]).toEqual(1);
-    expect(result.field[0][18]).toEqual(1);
-    expect(result.field[1][19]).toEqual(1);
-    expect(result.field[1][18]).toEqual(1);
+    expect(result.field[4][19]).toEqual(1);
+    expect(result.field[4][18]).toEqual(1);
+    expect(result.field[5][19]).toEqual(1);
+    expect(result.field[5][18]).toEqual(1);
   });
 
   test('A piece cant go off the left side', () => {
     const { field, piece } = tetris();
-    const { x, y } = pieceStartPosition;
     const result: Output = tetris({
       field,
       piece,
       move: { x: -100, y: 0 },
       nextPiece: newIPiece()
     });
-    expect(result.piece).toEqual({ x, y, shape: piece.shape });
+    expect(result.piece).toEqual({ x: 0, y: 0, shape: piece.shape });
 
   });
 
@@ -85,7 +83,7 @@ describe('tetris', () => {
     const secondGameState = tetris({
       field: firstGameState.field,
       piece: {
-        x: 1,
+        x: 4,
         y: 16,
         shape: firstGameState.piece.shape,
       },
@@ -93,10 +91,10 @@ describe('tetris', () => {
       nextPiece: newIPiece()
     });
 
-    expect(secondGameState.field[1][17]).toEqual(1);
-    expect(secondGameState.field[1][16]).toEqual(1);
-    expect(secondGameState.field[2][16]).toEqual(1);
-    expect(secondGameState.field[2][17]).toEqual(1);
+    expect(secondGameState.field[4][17]).toEqual(1);
+    expect(secondGameState.field[4][16]).toEqual(1);
+    expect(secondGameState.field[5][16]).toEqual(1);
+    expect(secondGameState.field[5][17]).toEqual(1);
   });
 
   test('When a long piece hits a block on board it should stick to that', () => {
@@ -144,7 +142,7 @@ describe('tetris', () => {
     const thirdGameState = tetris({
       field: secondGameState.field,
       piece: {
-        x: 1,
+        x: 4,
         y: 14,
         shape: secondGameState.piece.shape,
       },
@@ -152,10 +150,44 @@ describe('tetris', () => {
       nextPiece: newOPiece()
     });
 
-    expect(thirdGameState.field[1][14]).toEqual(1);
-    expect(thirdGameState.field[1][15]).toEqual(1);
-    expect(thirdGameState.field[1][16]).toEqual(1);
-    expect(thirdGameState.field[1][17]).toEqual(1);
+    expect(thirdGameState.field[4][14]).toEqual(1);
+    expect(thirdGameState.field[4][15]).toEqual(1);
+    expect(thirdGameState.field[4][16]).toEqual(1);
+    expect(thirdGameState.field[4][17]).toEqual(1);
   });
 
+  test('When a line is full remove it', () => {
+    const startField = createField(1);
+    const { field } = tetris({
+      field: startField,
+      piece: newOPiece(),
+      nextPiece: newOPiece()
+    })
+    expect(startField[0][0]).toBe(1);
+    expect(field[0][0]).toBe(0);
+    expect(field[1][0]).toBe(0);
+  });
+
+  test('End a game when a piece cant move', () => {
+    const { field, piece } = tetris();
+    const firstGameState: Output = tetris({
+      field,
+      piece,
+      move: { x: 0, y: 19 },
+      nextPiece: newIPiece()
+    });
+
+    const secondGameState = tetris({
+      field: firstGameState.field,
+      piece: {
+        x: 4,
+        y: 17,
+        shape: firstGameState.piece.shape,
+      },
+      move: { x: 0, y: 1 },
+      nextPiece: newIPiece()
+    });
+
+    expect(secondGameState.gameOver).toBe(true);
+  });
 })

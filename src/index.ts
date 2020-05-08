@@ -3,9 +3,9 @@ import { Output, newPiece } from './functional/tetris';
 import { Field } from './models/ticTacToe.model';
 import { TetrominoPiece } from './models/tetris.model';
 
-const rectSize = 25;
+const rectSize = 20;
 
-const setup = (): HTMLCanvasElement => {
+const setupCanvas = (): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
 
   canvas.id = "CursorLayer";
@@ -19,7 +19,7 @@ const setup = (): HTMLCanvasElement => {
   return canvas;
 }
 
-const canvas = setup();
+const canvas = setupCanvas();
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 let state: Output;
 state = tetris();
@@ -41,11 +41,15 @@ const drawPiece = (piece: TetrominoPiece): void => {
   }));
 }
 
-setInterval(() => {
+const intervalId: number = setInterval(() => {
   nextPiece = newPiece();
   state = tetris({ ...state, move: { x: 0, y: 1 }, nextPiece});
   drawField(state.field as Field[][]);
   drawPiece(state.piece);
+
+  if(state.gameOver) {
+    clearInterval(intervalId);
+  }
 }, 500);
 
 document.addEventListener('keydown', (event) => {
